@@ -1,0 +1,15 @@
+name: Source-only checks
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  host:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install host dependencies
+        run: sudo apt-get update && sudo apt-get install -y python3-numpy gcc
+      - name: Audit publication boundary
+        run: python3 -B tools/audit_publication.py
+      - name: Run synthetic host tests
+        run: python3 -B tests/run.py --output "$RUNNER_TEMP/mark2-host-tests"

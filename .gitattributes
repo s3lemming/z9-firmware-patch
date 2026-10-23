@@ -1,0 +1,3 @@
+* text=auto eol=lf
+# Preserve the exact frozen-source bytes used by profile.json.
+firmware/* -text

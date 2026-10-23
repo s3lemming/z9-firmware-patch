@@ -1,0 +1,23 @@
+# Never place private inputs or generated firmware in this repository.
+__pycache__/
+*.py[cod]
+.venv/
+build/
+output/
+outputs/
+private/
+*.bin
+*.bi
+*.elf
+*.o
+*.so
+*.wav
+*.pcm
+*.raw
+*.nef
+*.jpg
+*.zip
+*.tar*
+*.gz
+*.key
+.env*
