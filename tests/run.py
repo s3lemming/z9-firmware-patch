@@ -8,7 +8,7 @@ def main():
     if a.output.exists() or a.output.is_symlink():p.error('Output directory must be new')
     if a.output.resolve().is_relative_to(Path(__file__).resolve().parents[1]):p.error('Keep test output outside the repository')
     a.output.mkdir(parents=True);rows=[]
-    for name in ('core','native_profile','formats','tooling'):
+    for name in ('cache','loop','notice','native_profile','formats','tooling'):
         q=subprocess.run([sys.executable,'-B',str(Path(__file__).with_name(name+'.py')),str(a.output/name)],capture_output=True,text=True)
         row=dict(test=name,exit=q.returncode,stdout=q.stdout,stderr=q.stderr);rows.append(row)
         (a.output/'results.json').write_text(json.dumps(rows,indent=2)+'\n',encoding='utf-8')

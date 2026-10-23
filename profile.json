@@ -1,32 +1,35 @@
 {
   "schema": "z9-mark2-source-profile-v1",
-  "feature": "mark2-v11",
+  "feature": "mark2-v12",
   "target": "Z9 5.32",
   "original_module_sha256": "979fc8c5a46b3be8a998d5defb8be916d766ef85428744ba0bc47a1cb0ba9a66",
   "original_container_sha256": "2f13e75d38cd5b65da5b1f21a7828bc8a65ab17dc4c1b435b040ee62d2ed1d81",
-  "expected_payload_sha256": "9184a62c803d1d47ca18f11e244b848150287927c6db25ba00385e087a826f91",
-  "expected_payload_bytes": 81852857,
-  "expected_container_sha256": "600e95262cdbddc60ea5b5e6d472a379f54ff0eb0b6e1fd5e0a1a9ca74275182",
-  "expected_container_bytes": 101875839,
+  "expected_payload_sha256": "890193a3d77f55014d498ea007ef19d885efff3a4a0c220f15da27b9a6a1d77e",
+  "expected_payload_bytes": 81853435,
+  "expected_container_sha256": "eb75c697ace75c9cb92d16194862fa73e17ff9f658cc6e7c92c192bc4603dc9a",
+  "expected_container_bytes": 101876417,
   "authored_source_sha256": {
-    "firmware/adapter.c": "ae25715da8e42ff7497ed46f0a77fef21669a8fa282ef27adac225a7904cc6b4",
-    "firmware/picker.c": "8e57d5a47e68f70df762a2257817ca3eb3acea74eeef9901024c1a7e071205a3",
+    "firmware/adapter.c": "a45c1143fdc8c35c9c5ec881c9b8e144e251f65dcf9fe7fca016a31463853ef6",
+    "firmware/picker.c": "8dc9e9cdc6d49ce2227c9f22cb6c2a280382383cd780031226609079516bb76b",
     "firmware/mark2_import.c": "335531920a498b57484652c3365df3e44b522c7e9b4c10ef6f097a6575a8dba1",
-    "firmware/mark2_import.h": "e1c3e5247ba8e73a8b2ad458af4c63cc8fa2429e8d6e4718fd8266a05f9da713",
+    "firmware/mark2_import.h": "8823e23ce2066a205b9e3867c450f48db4f22574c76a8ca1e059dcc1d159371f",
     "firmware/mark2_native_file.c": "2f7bc114255785ed51912863997ba263179b48fa9335b84765e793ee05b583d1",
     "firmware/profile.h": "94ff7ad9617e1505fc74cf9e9d988947b71a51e8f368e01e72a681c880bcfb63",
-    "firmware/profile.c": "ad3bbf807312277ad27418ec16ff14ce94fe930a4aa6733c8ef1ac339ceea949",
+    "firmware/profile.c": "ff3d503c5fa860f10e890b7705449bcf9cc1f26f23e395a52b24ee24d8ba9cc2",
     "firmware/profile_native.c": "e64ce0c8b3a3c61152a7faf8e23c4483781dc6f78594f11379f8542c9d351123",
     "firmware/runtime.c": "38a49a22201ed5a2e2b78f6963a76a2aa1075521acb1a780886e7b4aeaf5fa77"
   },
   "limits": {
-    "import_attempts_per_boot": 4,
-    "immutable_callback_slots_per_boot": 64,
+    "import_attempts_per_boot": null,
     "max_files": 20,
     "max_basename_chars": 111,
     "max_seconds": 1.5,
     "sample_rate": 48000,
     "channels": 2,
-    "bits": 16
+    "bits": 16,
+    "distinct_PCM_contents_per_boot": 20,
+    "callback_registration_slots": 64,
+    "callback_slots_reusable_after_native_retirement": true,
+    "cxx_prefix_ms": 50
   }
 }

@@ -42,11 +42,11 @@ def operate(args):
         if args.output.exists()or args.output.is_symlink():raise ValueError('Output already exists')
         if args.output.resolve().is_relative_to(ROOT):raise ValueError('Keep generated firmware outside the repository')
         payload=args.payload.read_bytes()
-        if sha(payload)!=profile['expected_payload_sha256']or len(payload)!=profile['expected_payload_bytes']:raise ValueError('Only frozen mark2 v11 payload can be packed')
+        if sha(payload)!=profile['expected_payload_sha256']or len(payload)!=profile['expected_payload_bytes']:raise ValueError('Only frozen mark2 v12 payload can be packed')
         encoded,_=build(stock,payload,tables,k,modules)
     else:encoded=args.candidate.read_bytes()
     report,_=verify(encoded,tables,k,plain,modules,profile['expected_payload_sha256'],CAPACITY)
-    if sha(encoded)!=profile['expected_container_sha256']or len(encoded)!=profile['expected_container_bytes']:raise ValueError('Candidate differs from frozen v11 container')
+    if sha(encoded)!=profile['expected_container_sha256']or len(encoded)!=profile['expected_container_bytes']:raise ValueError('Candidate differs from frozen v12 container')
     if args.command=='pack':
         # No output is opened until independent readback and full identity pass.
         with args.output.open('xb')as f:f.write(encoded)

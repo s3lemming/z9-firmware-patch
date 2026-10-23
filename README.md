@@ -1,6 +1,6 @@
 # Z9 firmware patch — mark2
 
-Experimental, source-only custom shutter sound patch for **Nikon Z9 firmware 5.32**, frozen at mark2 v11. This repository contains newly authored patch code and offline tools. It does not contain Nikon firmware, Nikon source code, extracted resources, recordings, private format material, camera readbacks, or an installable firmware image.
+Experimental, source-only custom shutter sound patch for **Nikon Z9 firmware 5.32**, frozen at mark2 v12. This repository contains newly authored patch code and offline tools. It does not contain Nikon firmware, Nikon source code, extracted resources, recordings, private format material, camera readbacks, or an installable firmware image.
 
 [中文说明](README.zh-CN.md) · [Architecture](docs/architecture.md) · [Validation and limitations](docs/validation.md) · [Publication boundary](docs/publication.md)
 
@@ -10,7 +10,9 @@ Choose a custom shutter sound from the camera menu. Files are scanned only in `C
 
 Accepted audio is RIFF WAV, PCM format 1, **48 kHz, stereo, 16-bit little-endian**, with **0 < duration ≤ 1.5 seconds**. This is not a general audio converter. Unsupported files are rejected without replacing the previous loaded sound. Basenames must be printable ASCII and at most 111 characters. Configuration is stored in two CRC-protected records in the same folder.
 
-This release has deliberate resource limits: **4 import attempts per boot**, including failed attempts and automatic restoration, and **64 immutable audio callback slots per boot**. The 65th request is rejected by the adapter; audible fallback is not established. It is an experimental baseline, not a production-ready unlimited-use release. Read the [known limitations](docs/validation.md) before using locally generated output.
+v12 removes the four-import-attempt quota. Repeated PCM content reuses an immutable cache; failed attempts remain retryable. Up to **20 distinct PCM contents per boot** are retained, plus one unpublished scratch allocation. Cached choices remain available when the cache is full. The **64 callback registrations** can be reused only after the original final callback returns and pending outputs are clear; this does not authorize freeing PCM memory.
+
+In **C15/C30/C60/C120**, holding the shutter loops the first **50 ms**; after the original stop completes, the remainder plays once. Legal clips at or below 50 ms loop their whole padded content and have no tail. S/CL/CH retain their original fast/slow shutter rules. This is a bounded experimental candidate: native playback beyond 64 requests and long-term hardware stability are not qualified. Read the [validation boundaries](docs/validation.md).
 
 ## Build locally
 
