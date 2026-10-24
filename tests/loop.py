@@ -17,17 +17,18 @@ static void end(void){uint32_t v[2]={fake.kind,0};unsigned slot=fake.current-1;m
 int main(void){static uint8_t pcm[288000];unsigned cases=0;
  for(unsigned size=192;size<=288000;size+=192)for(unsigned c15=0;c15<2;c15++){
   memset(&fake,0,sizeof fake);queued=0;native8=native32=0;assert(!m2_bind_file(pcm,size,0));m2_composite();native8=native32=1;
-  uint64_t a[13]={0};a[0]=c15?0:6;a[2]=c15?66:0;a[3]=0x40fa0320;a[8]=c15?0x40e357d4:0x40e35768;assert(!m2_api(a));assert(a[1]==0&&a[2]==0);fake.notice=notify;a[9]=1;m2_api_result(a);
-  unsigned prefix=size<9600?size:9600;
+  uint64_t a[13]={0};a[0]=c15?0:6;a[2]=c15?66:0;a[3]=0x40fa0320;a[8]=c15?0x40e357d4:0x40e35768;assert(!m2_api(a));assert(a[1]==0&&a[2]==(c15?116-(size<9600?size:9600)/192:0));fake.notice=notify;a[9]=1;m2_api_result(a);
+  unsigned limit=c15?9600:7680;unsigned prefix=size<limit?size:limit;
+  if(c15){unsigned original_wait=(unsigned)a[2]-50;assert(prefix/192+original_wait==66);}
   for(unsigned n=0;n<5;n++){uint64_t b[3]={0,c15?9600:7680,1};m2_pcm(b);assert(b[0]==(uintptr_t)pcm&&b[1]==prefix&&b[2]==1);}
   uint64_t frame[13]={0};m2_frame_snapshot(frame);m2_frame_commit(frame);assert(!queued&&fake.active&&fake.cxx_enabled);
   assert(m2_bind_file(pcm,192,0));m2_cxx_stop();m2_cxx_stop();assert(fake.cxx_stops==1);native32=2;end();
-  if(size>9600){assert(queued==1&&fake.cxx_tail_pending&&fake.cxx_enabled);assert(m2_native_selection());
-   memset(a,0,sizeof a);a[3]=0x40fa0320;a[8]=0x40e35768;assert(!m2_api(a));fake.notice=notify;a[9]=1;m2_api_result(a);uint64_t b[3]={0,9600,1};m2_pcm(b);assert(b[0]==(uintptr_t)(pcm+9600)&&b[1]*b[2]==size-9600&&fake.cxx_tail_requests==1);end();
+  if(size>prefix){assert(queued==1&&fake.cxx_tail_pending&&fake.cxx_enabled);assert(m2_native_selection());
+   memset(a,0,sizeof a);a[3]=0x40fa0320;a[8]=0x40e35768;assert(!m2_api(a));fake.notice=notify;a[9]=1;m2_api_result(a);uint64_t b[3]={0,9600,1};m2_pcm(b);assert(b[0]==(uintptr_t)(pcm+prefix)&&b[1]*b[2]==size-prefix&&fake.cxx_tail_requests==1);end();
   }else assert(!queued);
   assert(!fake.active&&!fake.armed&&!fake.cxx_enabled&&!fake.cxx_tail_active&&!fake.cxx_tail_pending&&!fake.errors);assert(!m2_native_selection());cases++;
  }
- printf("CXX_50MS_LOOP_TAIL_PASS cases=%u state_bytes=%zu repeated_lower_starts=5 duplicate_release=checked no_frame_retrigger=checked\n",cases,sizeof fake);return 0;
+ printf("CXX_NATIVE50_40_LOOP_TAIL_PASS cases=%u state_bytes=%zu repeated_lower_starts=5 duplicate_release=checked no_frame_retrigger=checked\n",cases,sizeof fake);return 0;
 }
 '''
 p=E/'test.c';p.write_text(head+s+body);rows=[]

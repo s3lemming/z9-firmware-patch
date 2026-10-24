@@ -1,15 +1,15 @@
 {
   "schema": "z9-mark2-source-profile-v1",
-  "feature": "mark2-v12",
+  "feature": "mark2-v13",
   "target": "Z9 5.32",
   "original_module_sha256": "979fc8c5a46b3be8a998d5defb8be916d766ef85428744ba0bc47a1cb0ba9a66",
   "original_container_sha256": "2f13e75d38cd5b65da5b1f21a7828bc8a65ab17dc4c1b435b040ee62d2ed1d81",
-  "expected_payload_sha256": "890193a3d77f55014d498ea007ef19d885efff3a4a0c220f15da27b9a6a1d77e",
-  "expected_payload_bytes": 81853435,
-  "expected_container_sha256": "eb75c697ace75c9cb92d16194862fa73e17ff9f658cc6e7c92c192bc4603dc9a",
-  "expected_container_bytes": 101876417,
+  "expected_payload_sha256": "7992247104f1d9c3904c501351ab853b1c4d4eac5d7c631d820f47fe0702537b",
+  "expected_payload_bytes": 81853483,
+  "expected_container_sha256": "279d61749d343ce10f39d09e83e72e3efb139a366da26627cd22cf7448be5b3c",
+  "expected_container_bytes": 101876465,
   "authored_source_sha256": {
-    "firmware/adapter.c": "a45c1143fdc8c35c9c5ec881c9b8e144e251f65dcf9fe7fca016a31463853ef6",
+    "firmware/adapter.c": "dc61c61cad6880baca2977966eb9eee686670657c914a5a7046809302c8c29b6",
     "firmware/picker.c": "8dc9e9cdc6d49ce2227c9f22cb6c2a280382383cd780031226609079516bb76b",
     "firmware/mark2_import.c": "335531920a498b57484652c3365df3e44b522c7e9b4c10ef6f097a6575a8dba1",
     "firmware/mark2_import.h": "8823e23ce2066a205b9e3867c450f48db4f22574c76a8ca1e059dcc1d159371f",
@@ -30,6 +30,12 @@
     "distinct_PCM_contents_per_boot": 20,
     "callback_registration_slots": 64,
     "callback_slots_reusable_after_native_retirement": true,
-    "cxx_prefix_ms": 50
+    "cxx_prefix_ms_by_mode": {
+      "C15": 50,
+      "C30": 40,
+      "C60": 40,
+      "C120": 40
+    },
+    "C15_preserves_native_cycle_budget": true
   }
 }

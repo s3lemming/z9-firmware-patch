@@ -13,7 +13,11 @@ The camera continues to run its original firmware. Newly authored C integrates a
 | `builder.py` | Verified input, compilation, local trampoline/resource generation and minimal integration edits |
 | `container.py`, `readback.py` | Separate container construction and verification implementations |
 
-Fast and slow shutter paths retain their original event phases. Cxx starts an infinite native loop over the first min(50 ms, padded clip length), stops through the original stop entry, and queues one finite remainder after actual loop completion and original pending-state clearance. C15 and other Cxx use their distinct original bootstrap entries. The downstream image-frame call remains original, avoiding late whole-clip retriggers. This is a hold/release contract, not one sound per photograph.
+Fast and slow shutter paths retain their original event phases. In S/CL/CH each actual photo request restarts the selected whole PCM through the original stop/wait/restart path, without a queue. The final clip can finish. Configured speed affects request spacing; it does not select a fixed Cxx prefix.
+
+Cxx starts an infinite native loop over min(50ms, padded length) in C15 and min(40ms, padded length) in C30/C60/C120. After actual loop completion, original stop completion and pending-state clearance, it submits one finite remainder. C15's nonzero cycle budget is preserved and adjusted by `50 - prefix_bytes/192`; the original resource consumer supplies the remaining wait. Other Cxx use their original zero budget. Short other-Cxx clips loop their full length, not an artificially padded 40ms cycle. The downstream image-frame call remains original. This is a hold/release contract, not one sound per photograph.
+
+The v13 authored-code delta is confined to Cxx initialization. Code growth relocates 15 existing hook/pointer targets by 48 bytes without changing the 27 integration sites, state/BSS capacities or import/profile/callback logic. See [changes](../CHANGELOG.md).
 
 Native addresses, field offsets, type signatures and expected structural values describe recovered interfaces. They are version-specific. The original instructions replayed by hooks, original menu rows, and original resources are read from the user's hash-checked module at build time. They are not embedded in the source tree. Generated assembly and disassembly are private build outputs.
 

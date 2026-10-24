@@ -1,4 +1,4 @@
-/* v12 Cxx: native repeated first 50ms, native stop, then finite remainder. Native imported PCM allocations are retained for the
+/* v13 Cxx: native C15 first50ms, other Cxx first40ms; original stop then finite remainder. Native imported PCM allocations are retained for the
  * entire guest lifetime. Upper callback registrations are reusable only after
  * the original final-notification consumer returns with both outputs idle.
  * That registration retirement does not grant a PCM/DMA reclamation fence.
@@ -99,8 +99,15 @@ uint32_t m2_api(uint64_t *args) {
  p->current=slot+1;p->kind=(uint32_t)args[0];p->active=1;p->armed=bootstrap?3:1;
  if(bootstrap){
   p->route=2;p->cxx_pending=0;p->cxx_enabled=1;p->cxx_boots++;p->cxx_release=0;
-  p->cxx_tail_pending=p->cxx_tail_active=0;p->cxx_loop_bytes=p->pcm_bytes<9600?p->pcm_bytes:9600;
-  p->cxx_tail_bytes=p->pcm_bytes-p->cxx_loop_bytes;args[1]=0;args[2]=0;
+  p->cxx_tail_pending=p->cxx_tail_active=0;
+  uint32_t prefix_limit=caller==0x40e357d4u?9600u:7680u;
+  p->cxx_loop_bytes=p->pcm_bytes<prefix_limit?p->pcm_bytes:prefix_limit;
+  p->cxx_tail_bytes=p->pcm_bytes-p->cxx_loop_bytes;args[1]=0;
+  /* Extended C15 uses a cycle budget measured above this PCM hook against
+   * the original 50ms resource. Retain its native interval; compensate a
+   * shorter custom prefix so output duration plus wait keeps that budget.
+   * Other Cxx arrive with zero budget and use a prefix of at most 40ms. */
+  if(args[2])args[2]=(uint32_t)args[2]+50u-p->cxx_loop_bytes/192u;
  }else{
   uint32_t bytes=p->pcm_bytes;
   if(p->cxx_tail_pending){p->cxx_tail_pending=0;p->cxx_tail_active=1;bytes=p->cxx_tail_bytes;p->cxx_tail_requests++;}
