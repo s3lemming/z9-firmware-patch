@@ -1,5 +1,27 @@
 # Changes
 
+## mark2 v14 — 2026-11-05
+
+- Restore the confirmed persisted custom selection before the native Camera
+  sounds parent refresh; prepare the same model on direct Type-child entry.
+- Reconstruct filename rows after restore, remove stale A–E marks and focus/mark
+  the current full path. Keep a selected file outside the first 20 entries by
+  replacing the last row, without increasing the row or PCM bounds.
+- Consume initial focus once; repeated entry avoids re-import/re-allocation and
+  configuration writes. Explicit native selection remains disabled for custom
+  restore. The text renderer remains I/O-free.
+- Add one parent callback slot. Standalone integration sites increase 27→28;
+  payload and container grow by 480B. Picker remains 6304B in the original
+  8192B added BSS, adapter 1536B reservation unchanged. Playback, WAV/profile
+  cores and callback lifecycle are byte-identical source from v13.
+- Add 16 cold-menu synthetic groups/38 assertions with ASan/UBSan, alongside
+  existing cache, loop, callback, profile, format and tooling suites. Strict
+  local build/pack/independent readback use new frozen identities.
+- Preserve v13 validation as history and add a Z8 porting study in Chinese.
+  Integrated v39 audio-menu restart success is user-reported hardware evidence;
+  standalone v14 installation and Z8 functionality remain unqualified.
+
+
 ## mark2 v13 — 2026-10-24
 
 This is a patch-project version; the target Nikon firmware remains 5.32.

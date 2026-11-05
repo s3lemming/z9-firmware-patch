@@ -1,48 +1,51 @@
-# Validation and limitations — v13
+# Validation and limitations — v14
 
-## Frozen output identity
-
-The documented toolchain and exact original 5.32 input must reproduce:
+## Frozen standalone output identity
 
 | Output | Bytes | SHA-256 |
 |---|---:|---|
-| MAIN payload, excluding module CRC | 81853483 | `7992247104f1d9c3904c501351ab853b1c4d4eac5d7c631d820f47fe0702537b` |
-| Full private container | 101876465 | `279d61749d343ce10f39d09e83e72e3efb139a366da26627cd22cf7448be5b3c` |
+| MAIN excluding module CRC | 81853963 | `c8c633ee6afb63bf776fa6c6f7b58b35deada58ef2b7e55790f2b12e1e5d0e01` |
+| Full private container | 101876945 | `6dd183e3de23f616d533a1ecf0c2e325cb67715e6a3def11bd65aee0e76a9734` |
 
-The independent parser checks lengths, offsets, terminal version, module/container integrity and the unchanged other five modules. Eight damaged private-container variants were rejected. Local byte identity is not camera acceptance. No binaries or private inputs are published. [v12 validation](history/v12-validation.md) is retained as historical evidence, not relabeled as v13.
+Strict source/input checks, compilation, packing and independent readback passed
+locally with the documented toolchain. The other five modules remain original.
+No firmware or private inputs are published. Identity enrollment was a separate
+private preparation step; the final public builder always enforces frozen input,
+source and output hashes. These output identities differ from the integrated
+v39 package. [v13 validation](history/v13-validation.md) remains historical.
 
-## Synthetic host tests
+## Current evidence
 
-Actual authored C is compiled with explicit native-interface mocks and ASan/UBSan. Cache coverage includes 2420 assertions, 1001 selections across nine contents, 400 invalid-import recoveries, busy retry, content changes, dual-card commits, allocation failure and the 20-content bound. Loop coverage includes 3000 padded-length/entry combinations, C15's 66ms budget invariant, mode-dependent 50/40ms prefixes, repeated lower starts, duplicate release and one finite tail. Callback coverage includes 1000 requests without reset, 64 registrations plus 936 reuses, delayed retirement and stale API-return guards. Profile I/O, format/duration and synthetic tooling rejection suites remain included.
-
-These fixtures do not certify physical timing, hardware races, card removal or native sustained use. Short Cxx clips are covered synthetically, not newly qualified on a camera.
-
-## Local native evidence
-
-| Scope | Measured result | Boundary |
+| Layer | Result | Boundary |
 |---|---|---|
-| Five main Cxx audio runs with the final payload | C15 loop medians 66.996/66.991ms; C30/C60/C120 about 40.011ms; actual PCM, stop and one remainder checked | C15's full menu/live-view recovery still failed |
-| One fixed 1/200 ordinary workflow | 20 photos: native before/after, five independent custom S presses, CL1 three photos, CL5 five, CH10 five; 18 custom requests accepted/completed with current-source PCM/clock consumption | One complete workflow, not five successful boots |
-| Ordinary speed | CL1/CL5/CH10 median 995.653/203.004/103.983ms, within 25%; last burst clip complete, original sound restored, final menus/live view recovered | Only these configured speeds; not all-rate or acoustic qualification |
-| Earlier slow phases | CL1/CL5/CH10 median 996.626/204.515/103.774ms, within 25%; completed phase content/audio checked | Full mixed-shutter recipe did not finish |
+| Standalone actual picker C | 16 groups/38 assertions with ASan/UBSan | Original file/UI/allocation functions are explicit mocks |
+| Existing synthetic suites | cache2420 assertions, loop3000 cases, callback1000 requests, profile329 cases, format29, tooling16 | Not native sustained-use or device qualification |
+| Integrated v39 QEMU | Fresh-process cold parent CUS/current filename, repeated entry, native A/custom switch and post-photo menu passed | One final complete workflow; intermediate failed navigation attempts remain failures |
+| Integrated actual photo/audio | One C15 JPEG fully decoded; 9600B prefix and 166080B tail, successful callbacks and completed DMA bytes match source | Not photo-rate, acoustic or all-mode stability qualification |
+| User hardware feedback, 2026-11-05 | Integrated v39 audio menu correct after restart | No claimed standalone v14 installation, arbitrary power-loss matrix or long-term run |
 
-Three distinct audio choices were imported through native menus in the fixed-fast run. The final 1.366s clip crossed the finite audio-block boundary. Every custom request had current-source consumption, even where a later photo interrupted the prior clip. Saved incomplete output blocks are not exact acoustic-cut measurements. Both 160-byte configuration banks had valid CRCs and the latest profile disabled custom sound after native restoration.
+The original failure was absent menu-entry restore plus missing filename-model
+reconstruction. The new parent callback reconciles confirmed state before
+native values refresh. Child marking/focus fixes the remaining stale A/hidden
+filename symptom. Tests cover first and direct child entry, audio-first restore,
+repeat/no-write behavior, explicit native selection, invalid/disabled CFG, absent
+WAV/card, dual-card ambiguity, card2 only, busy deferral and selection beyond20.
+Renderer I/O remains forbidden. The additional integrated runtime-ready guard
+is tested privately with its own anchor, not transplanted into this fixed-BSS
+standalone build.
 
-Five ordinary fresh attempts had matching model/boot-loader, ELF, final payload and RAW fingerprints, but four failed and one completed. Across the development stages there were 13 actual cold-start attempts, including one earlier different payload; two prelaunch refusals were not cold starts. Five main final-payload Cxx runs passed their audio scope. These counts do not imply five full business passes, long-run qualification or native request reuse beyond 64.
+## Limits retained
 
-## Retained failures
+Published PCM is immutable and retained until shutdown; at most20 distinct
+contents plus scratch. Callback reuse needs native final-return retirement and
+clear pending states; completion alone is insufficient and does not free PCM.
+Missing-card restore does not automatically retry. An absent card cannot have
+its old profile disabled. Full card removal/power-loss cases, all CL/CH rates,
+short/repressed Cxx hardware behavior, native sustained use beyond64 requests
+and long-term stability remain outside the new acceptance scope.
 
-Earlier mixed-shutter recipes stopped when desired 1/200 remained applied 1/40 with parameter pending; restoring a real half press did not resolve it. A separate host-menu guard failure stopped before the shutter adjustment. Correcting that guard does not establish a firmware fix. The later fixed-fast success does not solve the mixed-shutter failure. C15 menu/live-view recovery also remains incomplete; causal independence from this patch is unproved.
-
-v12 separately recorded an unsupported-MMIO failure in both unpatched and patched firmware on the same model. That original-firmware comparison is evidence for that specific gap; it does not automatically explain v13's parameter-pending or C15 recovery failures. QEMU was unchanged for this release.
-
-## Still unqualified
-
-- Native sustained playback beyond 64 requests and long-term camera stability.
-- All CL/CH rates, exact 1/50 fast/slow boundary and the full mixed-shutter recipe.
-- Short Cxx clips and repressing during an unfinished tail on native hardware.
-- Complete dual-card removal/power-loss scenarios and physical loudness calibration.
-- Full C15 recovery and five completed business cold starts.
-- Camera installation/acceptance of v13; earlier hardware feedback does not qualify this version.
-
-The 20-content cache bound remains; published PCM is not freed. Missing-card restore does not automatically retry. Choosing native sound with an absent card cannot rewrite its old profile. QEMU GPIO-to-stop delays are not hardware latency claims. Publishing source or rebuilding exact bytes adds no device qualification.
+Historical v13 mixed-shutter/recovery failures remain in its evidence; the
+bounded integrated C15 success does not rewrite those old results. QEMU emulation,
+RAW capture/retouch and Z8 firmware are not implemented by this repository.
+See the [Z8 learning/porting guide](z8-porting.zh-CN.md) for interfaces that need
+new target-version evidence.

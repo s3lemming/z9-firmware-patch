@@ -1,8 +1,8 @@
 # Z9 firmware patch — mark2
 
-Experimental, source-only custom shutter sound patch for **Nikon Z9 firmware 5.32**, frozen at mark2 v13. This repository contains newly authored patch code and offline tools. It does not contain Nikon firmware, Nikon source code, extracted resources, recordings, private format material, camera readbacks, or an installable firmware image.
+Experimental, source-only custom shutter sound patch for **Nikon Z9 firmware 5.32**, frozen at mark2 v14. This repository contains newly authored patch code and offline tools. It does not contain Nikon firmware, Nikon source code, extracted resources, recordings, private format material, camera readbacks, or an installable firmware image.
 
-[中文说明](README.zh-CN.md) · [Changes](CHANGELOG.md) · [Architecture](docs/architecture.md) · [Validation and limitations](docs/validation.md) · [Publication boundary](docs/publication.md)
+[中文说明](README.zh-CN.md) · [Changes](CHANGELOG.md) · [Architecture](docs/architecture.md) · [Z8 porting study (中文)](docs/z8-porting.zh-CN.md) · [Validation and limitations](docs/validation.md) · [Publication boundary](docs/publication.md)
 
 ## Feature
 
@@ -13,6 +13,21 @@ Accepted audio is RIFF WAV, PCM format 1, **48 kHz, stereo, 16-bit little-endian
 v12 removes the four-import-attempt quota. Repeated PCM content reuses an immutable cache; failed attempts remain retryable. Up to **20 distinct PCM contents per boot** are retained, plus one unpublished scratch allocation. Cached choices remain available when the cache is full. The **64 callback registrations** can be reused only after the original final callback returns and pending outputs are clear; this does not authorize freeing PCM memory.
 
 In **C15**, holding the shutter loops the first **50 ms**, preserving the original cycle budget (about 67ms measured for long clips). **C30/C60/C120** loop the first **40 ms** (about 40ms measured for long clips). After the original stop completes, the remainder plays once. Clips at or below their mode's boundary loop their whole padded content without an extra tail; other Cxx clips shorter than 40ms do not gain a fixed 40ms period. S/CL/CH retain their original request-driven fast/slow paths. See the [v12-to-v13 changes](CHANGELOG.md) and [validation boundaries](docs/validation.md). Native sustained use beyond 64 requests and long-term hardware stability remain unqualified.
+
+## v14 cold-menu fix
+
+Entering Camera sounds now restores a confirmed saved custom selection before
+the original page refresh. The Type child reconstructs the bounded file model,
+clears the native A selection marker and marks/focuses the current WAV. A saved
+file beyond the first 20 entries replaces the last displayed row, preserving
+the bound. Repeated entry does not re-import PCM or rewrite the configuration.
+The text renderer performs no file I/O; explicit Type A selection remains native.
+
+The corresponding audio fix in the separately integrated Z9 test package v39
+received user feedback on 2026-11-05 that the audio menu is correct after restart.
+This repository's standalone mark2 v14 has separately verified output identities;
+that integrated-package feedback is not installation acceptance of this standalone
+build or a Z8 port. Playback code is unchanged from v13. See [validation](docs/validation.md).
 
 ## Build locally
 

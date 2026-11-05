@@ -1,4 +1,4 @@
-"""Build frozen mark2 v13 from a user-supplied original Z9 5.32 MAIN.
+"""Build frozen mark2 v14 from a user-supplied original Z9 5.32 MAIN.
 
 The source tree contains no original instruction words or menu resources.
 Any displaced instruction/resource is read locally from the exact checked input.
@@ -7,7 +7,7 @@ import binascii, hashlib, json, struct, subprocess
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 EXPECTED_MODULE='979fc8c5a46b3be8a998d5defb8be916d766ef85428744ba0bc47a1cb0ba9a66'
-EXPECTED_PAYLOAD='7992247104f1d9c3904c501351ab853b1c4d4eac5d7c631d820f47fe0702537b'
+EXPECTED_PAYLOAD='c8c633ee6afb63bf776fa6c6f7b58b35deada58ef2b7e55790f2b12e1e5d0e01'
 def build(module,output):
     if not __debug__: raise ValueError('Optimized Python disables internal checks; use normal Python')
     if Path(output).is_symlink(): raise ValueError('Build directory must not be a link')
@@ -17,7 +17,7 @@ def build(module,output):
     if hashlib.sha256(module.read_bytes()).hexdigest()!=EXPECTED_MODULE: raise ValueError('Only the exact original Z9 5.32 MAIN module is supported')
     manifest=json.loads((ROOT/'profile.json').read_text(encoding='utf-8'))
     for name,expected in manifest['authored_source_sha256'].items():
-        if hashlib.sha256((ROOT/name).read_bytes()).hexdigest()!=expected: raise ValueError('Source differs from frozen v13: '+name)
+        if hashlib.sha256((ROOT/name).read_bytes()).hexdigest()!=expected: raise ValueError('Source differs from frozen v14: '+name)
     O.mkdir(parents=True);patches=[];commands=[]
     def sha(b):return hashlib.sha256(b).hexdigest()
     raw=module.read_bytes();assert sha(raw)=='979fc8c5a46b3be8a998d5defb8be916d766ef85428744ba0bc47a1cb0ba9a66'
@@ -113,17 +113,19 @@ def build(module,output):
     for pc in [0x431c1ff8,0x431c2018,0x431c20b8]:
      assert struct.unpack_from('<Q',orig,off(pc))[0]==0x405a57e0
      patch(pc,struct.pack('<Q',syms['mark2_discovery_submit']),'All native Type menu submit events -> file/native selector, original handler retained')
+    assert struct.unpack_from('<Q',orig,off(0xa028f42a8))[0]==0x405a54b4
+    patch(0xa028f42a8,struct.pack('<Q',syms['mark2_sound_page_refresh']),'Native parent entry restores confirmed PCM and filename model before original values')
     assert struct.unpack_from('<Q',orig,off(0xa028f42d8))[0]==0x405a575c
     patch(0xa028f42d8,struct.pack('<Q',syms['mark2_sound_refresh']),'Native type refresh followed by selected filename highlight')
     # Displaced text instruction was read from the user input above.
     patch(0x4032e57c,branch(0x4032e57c,syms['mark2_discovery_label']),'Custom labels only; original text resolver instruction replayed')
     patch(0x405a5584,struct.pack('<I',0x94000000|(((syms['mark2_outer_type_text']-0x405a5584)//4)&0x3ffffff)),'Only outer Camera sounds Type text: CUS when custom selected, native enum unchanged')
     b.extend(b'Ver.05.32.00\0');payload=O/'payload.bin'
-    assert sha(b)==EXPECTED_PAYLOAD, 'Compiler output differs from frozen v13; no final payload/module written'
+    assert sha(b)==EXPECTED_PAYLOAD, 'Compiler output differs from frozen v14; no final payload/module written'
     payload.write_bytes(b)
     module_bytes=bytes(b)+struct.pack('>H',binascii.crc_hqx(b,0))
     (O/'eg1990_053200.bi').write_bytes(module_bytes)
 
-    result=dict(feature='mark2-v13',input_module_sha256=sha(raw),payload_sha256=sha(b),payload_bytes=len(b),module_sha256=sha(module_bytes),module_bytes=len(module_bytes),patches=patches,compiler=run(['aarch64-linux-gnu-gcc','--version']).splitlines()[0],device_qualified=False)
+    result=dict(feature='mark2-v14',input_module_sha256=sha(raw),payload_sha256=sha(b),payload_bytes=len(b),module_sha256=sha(module_bytes),module_bytes=len(module_bytes),patches=patches,compiler=run(['aarch64-linux-gnu-gcc','--version']).splitlines()[0],device_qualified=False)
     (O/'build-report.json').write_text(json.dumps(result,indent=2)+'\n',encoding='utf-8')
     return result

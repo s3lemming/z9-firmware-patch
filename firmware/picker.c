@@ -14,6 +14,7 @@
 extern int m2_bind_file(uint8_t *,uint32_t,uint32_t);
 extern int m2_native_selection(void);
 extern uint32_t m2_custom_selected(void);
+static int same_path(const char *,const char *);
 #define FILE_LIMIT 20u
 /* ASCII filename stored once as its native UTF-16 display label.  The mount
  * stays separate; construct the complete import/profile path on the stack. */
@@ -27,6 +28,7 @@ struct picker {
  uint32_t directory_seen,directory_checks,directory_create_attempts,directory_create_status,directory_errors[2];
  uint8_t *cache_pcm[FILE_LIMIT];uint32_t cache_bytes[FILE_LIMIT];
  uint32_t cache_count,cache_hits,scratch_allocations,cache_allocations,cache_full;
+ uint32_t focus_pending;
 };
 _Static_assert(sizeof(struct picker)<=6656,"picker fits original +8192 BSS reservation after 1536-byte adapter");
 static void file_path(char path[128],const struct file *f){
@@ -79,11 +81,18 @@ static int ensure_directory(char root){
 static uint32_t collect(const uint8_t *entry){
  struct picker *p=K;uint8_t name[112];uint32_t n;
  if((entry[0x20e]&0x10)||!entry_name(entry,name,&n)||!wav(name,n))return 0;
- if(p->count==FILE_LIMIT){p->overflow=1;return 0;}
- struct file *f=&p->files[p->count];const char *mount=FN(0x4031c30c,const char *(*)(uint32_t))(p->active-1);
+ struct file candidate;struct file *f=&candidate;const char *mount=FN(0x4031c30c,const char *(*)(uint32_t))(p->active-1);
  f->root=mount[0];
  for(uint32_t i=0;i<=n;i++)f->label[i]=name[i];
- p->label_bytes[p->count]=n*2;p->count++;return 0;
+ uint32_t index=p->count;
+ if(index==FILE_LIMIT){
+  p->overflow=1;char path[128];file_path(path,f);
+  /* Keep the current confirmed path visible within the same twenty-row
+   * bound even if later directory entries pushed it beyond the first page. */
+  if(!m2_custom_selected() || !same_path(path,p->loaded_path))return 0;
+  index=FILE_LIMIT-1;
+ }else p->count++;
+ p->files[index]=candidate;p->label_bytes[index]=n*2;return 0;
 }
 
 static int same_path(const char *a,const char *b){for(unsigned i=0;i<128;i++){if(a[i]!=b[i])return 0;if(!a[i])return 1;}return 0;}
@@ -171,6 +180,32 @@ static void publish_rows(void){
  }
  *(uint8_t **)(HOLDER+0x10)=(uint8_t *)p->rows;*(uint16_t *)(HOLDER+0x20)=(uint16_t)(6+p->count);
 }
+static void scan_files(void){
+ struct picker *p=K;
+ p->count=0;p->overflow=0;p->scans++;p->import_status=0;
+ for(uint32_t storage=0;storage<2;storage++){
+  const char *mount=FN(0x4031c30c,const char *(*)(uint32_t))(storage);char path[20];
+  if(!mount || mount[0]<'A' || mount[0]>'Z' || mount[1]!=':' || mount[2]){p->errors[storage]=0xffffffffu;continue;}
+  p->active=storage+1;p->directory_errors[storage]=ensure_directory(mount[0]);
+  if(p->directory_errors[storage]){p->errors[storage]=0xffffffffu;continue;}
+  directory_path(path,mount[0]);
+  p->errors[storage]=FN(0x402da504,uint32_t(*)(const char *,uint32_t,uint32_t(*)(const uint8_t *)))(path,0xef,collect);
+ }
+ p->active=0;publish_rows();p->focus_pending=1;
+}
+/* Entry callbacks run before the native page values are refreshed. Restore
+ * once here, outside the text renderer, and build the bounded filename model
+ * before the Type child is constructed. Reading a profile never selects an
+ * original A row or writes a new configuration record. */
+static void prepare_menu(void){
+ struct picker *p=K;if(p->active)return;
+ if(!m2_custom_selected())m2_restore_for_audio();
+ if(m2_custom_selected() && p->published && !p->scans)scan_files();
+}
+void mark2_sound_page_refresh(void *ctx){
+ prepare_menu();
+ FN(0x405a54b4,void(*)(void *))(ctx);
+}
 void mark2_discovery_submit(void **outer){
  if(!outer || !*outer)return;
  const uint8_t *ctx=*outer;const uint8_t *holder=*(const uint8_t *const *)(ctx+0x50);
@@ -184,16 +219,7 @@ void mark2_discovery_submit(void **outer){
   disable_profiles();p->native_selections++;FN(0x405a57e0,void(*)(void **))(outer);return;
  }
  if(id==0x7e20){
-  p->count=0;p->overflow=0;p->scans++;p->import_status=0;
-  for(uint32_t storage=0;storage<2;storage++){
-   const char *mount=FN(0x4031c30c,const char *(*)(uint32_t))(storage);char path[20];
-   if(!mount || mount[0]<'A' || mount[0]>'Z' || mount[1]!=':' || mount[2]){p->errors[storage]=0xffffffffu;continue;}
-   p->active=storage+1;p->directory_errors[storage]=ensure_directory(mount[0]);
-   if(p->directory_errors[storage]){p->errors[storage]=0xffffffffu;continue;}
-   directory_path(path,mount[0]);
-   p->errors[storage]=FN(0x402da504,uint32_t(*)(const char *,uint32_t,uint32_t(*)(const uint8_t *)))(path,0xef,collect);
-  }
-  p->active=0;publish_rows();return;
+  scan_files();return;
  }
  uint32_t file=id-0x7e21;if(file>=p->count)return;
  p->active=3;uint8_t *pcm=0;struct m2_pcm_info info={0};
@@ -222,10 +248,19 @@ void mark2_discovery_submit(void **outer){
  p->active=0;
 }
 void mark2_sound_refresh(void *ctx){
+ prepare_menu();
  FN(0x405a575c,void(*)(void *))(ctx);
  if(m2_custom_selected())for(unsigned i=0;i<K->count;i++){
   char path[128];file_path(path,&K->files[i]);
-  if(same_path(K->loaded_path,path))FN(0x403b05d0,void(*)(void *,uint32_t,uint32_t))(ctx,0x7e21+i,1);
+  if(same_path(K->loaded_path,path)){
+   /* The native property intentionally stays Type A=0 for playback routing.
+    * Its original selection outline is therefore stale for a custom clip. */
+   for(unsigned j=0;j<5;j++)FN(0x403b05d0,void(*)(void *,uint32_t,uint32_t))(ctx,0x3a6a+j,0);
+   if(K->focus_pending || FN(0x403ae600,uint32_t(*)(void))()!=1)
+    FN(0x403b0560,void(*)(void *,uint32_t))(ctx,0x7e21+i);
+   FN(0x403b05d0,void(*)(void *,uint32_t,uint32_t))(ctx,0x7e21+i,1);
+   K->focus_pending=0;break;
+  }
  }
 }
 /* Hook only the Camera sounds -> Type value consumer (405A5584).  The
