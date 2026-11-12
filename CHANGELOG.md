@@ -1,5 +1,13 @@
 # Changes
 
+## mark2 v15 — 2026-11-13
+
+- Add an ordinary CUS restart gate after native kind0 admission. Selected custom PCM takes the original stop/wait/new-request path; native selection and Cxx/pending/active tails retain their original ownership. No terminal-kind-family expansion.
+- Preserve X0–X18/X30, NZCV and 16-byte stack alignment; callee-saved registers retain AAPCS64 semantics. Read the displaced word locally from the exact original module. Add one integration site, 28→29; standalone MAIN/container grow240B. No state/BSS or PCM lifetime expansion.
+- Add576 actual-predicate ownership cases and8 AArch64 production-gate ABI cases. Keep previous component suites and historical validation. Extend CI dependencies for the synthetic architecture check.
+- Freeze new standalone build/container identities. Separate integrated c4 user-reported CH20 acceptance from standalone v15 installation and QEMU timing/target-branch coverage.
+- Add CH20/Z8 porting notes covering kind0 versus terminal kinds, native wait/deadline paths, callback numbering and the remaining emulator gap.
+
 ## mark2 v14 — 2026-11-05
 
 - Restore the confirmed persisted custom selection before the native Camera

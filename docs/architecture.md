@@ -41,3 +41,19 @@ The builder records the byte count, address space, consumer, and before/after ha
 Published PCM allocations remain immutable until shutdown. A scratch buffer is validated on each choice and compared by complete content against at most 20 published entries. Failed imports and cache hits do not consume new published allocations. Busy selection preserves the prior choice. New card configuration is committed before disabling the previous mounted-card profile.
 
 Callback registrations can be reused only after the upper native final callback returns and the request plus both output pending states are clear. An admitted-request sequence protects against stale API returns. Completion notification alone is insufficient, and rejected submissions lacking final retirement remain reserved. This bounded registration reuse does not establish a PCM DMA reclamation fence.
+
+## v15 ordinary-CUS gate
+
+The original scheduler has already selected ordinary kind0 before ROM40F9F9B8.
+`m2_ordinary_restart_required` reads published selection and Cxx/tail ownership
+only. Selected CUS with all three Cxx/tail fields clear branches to original
+40F9FA4C (stop/wait/new request). Otherwise the locally read displaced word is
+replayed and original40F9F9BC continues. State from the previous request, such as
+`kind`, `route`, `active` or `armed`, is not a substitute for native admission.
+
+The176B aligned gate saves X0–X18/X30 and NZCV around the C predicate; remaining
+registers follow AAPCS64. The shared generator is exercised with an authored ADDS
+fixture and an ABI-clobbering stub on AArch64. Original module words are never
+committed. The fixed-BSS standalone needs no integrated heap-ready probe; ports
+using dynamic state must separately prove availability before dereferencing it.
+There are now29 integration sites, with existing allocations and capacities.

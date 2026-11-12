@@ -193,3 +193,13 @@ int m2_native_selection(void){
  p->selected=0;p->route=0;p->cxx_pending=0;return 0;
 }
 uint32_t m2_custom_selected(void){return __atomic_load_n(&P->selected,__ATOMIC_ACQUIRE);}
+
+/* Called only from the original scheduler's already-qualified kind0 gate.
+ * Long imported PCM must use native stop/wait/restart instead of reusing the
+ * short built-in resource. Cxx and its pending/active tail retain ownership.
+ * No busy, pending, completion, DMA or timestamp state is changed here. */
+uint32_t m2_ordinary_restart_required(void){
+ struct state *p=P;
+ return __atomic_load_n(&p->selected,__ATOMIC_ACQUIRE) &&
+        !p->cxx_enabled && !p->cxx_tail_pending && !p->cxx_tail_active;
+}

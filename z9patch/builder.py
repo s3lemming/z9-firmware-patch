@@ -1,13 +1,14 @@
-"""Build frozen mark2 v14 from a user-supplied original Z9 5.32 MAIN.
+"""Build frozen mark2 v15 from a user-supplied original Z9 5.32 MAIN.
 
 The source tree contains no original instruction words or menu resources.
 Any displaced instruction/resource is read locally from the exact checked input.
 """
 import binascii, hashlib, json, struct, subprocess
 from pathlib import Path
+from .restart import ordinary_restart_assembly
 ROOT=Path(__file__).resolve().parents[1]
 EXPECTED_MODULE='979fc8c5a46b3be8a998d5defb8be916d766ef85428744ba0bc47a1cb0ba9a66'
-EXPECTED_PAYLOAD='c8c633ee6afb63bf776fa6c6f7b58b35deada58ef2b7e55790f2b12e1e5d0e01'
+EXPECTED_PAYLOAD='3411b21ec875ba3326f9e0a4c6e1ecadc81a696d15b0e2af9f3b0ebe052801bc'
 def build(module,output):
     if not __debug__: raise ValueError('Optimized Python disables internal checks; use normal Python')
     if Path(output).is_symlink(): raise ValueError('Build directory must not be a link')
@@ -17,7 +18,7 @@ def build(module,output):
     if hashlib.sha256(module.read_bytes()).hexdigest()!=EXPECTED_MODULE: raise ValueError('Only the exact original Z9 5.32 MAIN module is supported')
     manifest=json.loads((ROOT/'profile.json').read_text(encoding='utf-8'))
     for name,expected in manifest['authored_source_sha256'].items():
-        if hashlib.sha256((ROOT/name).read_bytes()).hexdigest()!=expected: raise ValueError('Source differs from frozen v14: '+name)
+        if hashlib.sha256((ROOT/name).read_bytes()).hexdigest()!=expected: raise ValueError('Source differs from frozen v15: '+name)
     O.mkdir(parents=True);patches=[];commands=[]
     def sha(b):return hashlib.sha256(b).hexdigest()
     raw=module.read_bytes();assert sha(raw)=='979fc8c5a46b3be8a998d5defb8be916d766ef85428744ba0bc47a1cb0ba9a66'
@@ -62,6 +63,8 @@ def build(module,output):
     api=struct.unpack_from('<I',orig,0x40e355fc-BASE)[0]
     call=struct.unpack_from('<I',orig,0x40e355c4-BASE)[0];assert call&0xfc000000==0x94000000 and 0x40e355c4+((call&0x3ffffff)<<2)==0x40e355fc
     asm=['.section .text.hooks,"ax"']
+    restart_word=struct.unpack_from('<I',orig,0x40f9f9b8-BASE)[0]
+    asm += ordinary_restart_assembly(restart_word)
     for name,func,pc,word in [('api','m2_api',0x40e355fc,api),('pcm','m2_pcm',0x40d25dd0,struct.unpack_from('<I',orig,0x40d25dd0-BASE)[0])]:
      assert struct.unpack_from('<I',orig,pc-BASE)[0]==word
      asm += [f'.global hook_{name}',f'hook_{name}:','sub sp,sp,#96','stp x0,x1,[sp]','stp x2,x3,[sp,#16]','stp x4,x5,[sp,#32]','stp x6,x7,[sp,#48]','str x30,[sp,#64]','mov x0,sp',f'bl {func}',*(['cbnz w0,api_rejected']if name=='api'else []),'ldp x0,x1,[sp]','ldp x2,x3,[sp,#16]','ldp x4,x5,[sp,#32]','ldp x6,x7,[sp,#48]',*(['bl original_api','str x0,[sp,#72]','mov x0,sp','bl m2_api_result','ldr x0,[sp,#72]','ldr x30,[sp,#64]','add sp,sp,#96','ret']if name=='api'else ['ldr x30,[sp,#64]','add sp,sp,#96',f'.inst {word}',f'b continue_{name}'])]
@@ -89,7 +92,7 @@ def build(module,output):
      'cmp w1,#0xc86','b.lo 3f','cmp w1,#0xc9b','b.lo mark2_picker_label','3:',
      f'.inst {label_word}','b native_text_continue']
     (O/'hooks.S').write_text('\n'.join(asm)+'\n')
-    (O/'layout.ld').write_text('continue_notice_sync_end = 0x40e395b4; continue_notice_async_end = 0x40e3972c; native_text_continue = 0x4032e580; native_submit = 0x40f96a20; continue_composite = 0x40fa0134; continue_cxx_stop = 0x40fa019c; continue_api = 0x40e35600; continue_pcm = 0x40d25dd4; continue_flags = 0x40f9f75c; continue_terminal = 0x40f9ff30; continue_fast_timer = 0x40f9fdf4; SECTIONS { . = 0x44f6c000; .text : { *(.text*) } .rodata : { *(.rodata*) } /DISCARD/ : { *(.comment) *(.eh_frame*) *(.note*) } }\n')
+    (O/'layout.ld').write_text('ordinary_restart_continue = 0x40f9f9bc; ordinary_restart_stop_native = 0x40f9fa4c; continue_notice_sync_end = 0x40e395b4; continue_notice_async_end = 0x40e3972c; native_text_continue = 0x4032e580; native_submit = 0x40f96a20; continue_composite = 0x40fa0134; continue_cxx_stop = 0x40fa019c; continue_api = 0x40e35600; continue_pcm = 0x40d25dd4; continue_flags = 0x40f9f75c; continue_terminal = 0x40f9ff30; continue_fast_timer = 0x40f9fdf4; SECTIONS { . = 0x44f6c000; .text : { *(.text*) } .rodata : { *(.rodata*) } /DISCARD/ : { *(.comment) *(.eh_frame*) *(.note*) } }\n')
     flags=['-O2','-Wall','-Wextra','-Werror','-ffreestanding','-fno-builtin','-fno-stack-protector','-fno-unwind-tables','-fno-asynchronous-unwind-tables','-mgeneral-regs-only','-mstrict-align','-fno-pic','-march=armv8-a','-mno-outline-atomics']
 
     for unit in ['picker','mark2_import','mark2_native_file','profile','profile_native','runtime']:run(['aarch64-linux-gnu-gcc',*flags,'-c',unit+'.c','-o',unit+'.o'])
@@ -100,7 +103,7 @@ def build(module,output):
     assert len(orig)+BASE<ENTRY and end<0x45980000
     b.extend(bytes(ENTRY-BASE-len(b)));b.extend(code)
     call2=struct.unpack_from('<I',orig,0x40e35764-BASE)[0];assert call2&0xfc000000==0x94000000
-    for pc,name in [(0x40e355fc,'api'),(0x40d25dd0,'pcm'),(0x40f9f758,'flags'),(0x40f9ff2c,'terminal'),(0x40f9fdf0,'fast_timer')]:patch(pc,branch(pc,syms['hook_'+name]),name+' native adapter, original displaced instruction replayed')
+    for pc,name in [(0x40f9f9b8,'ordinary_restart'),(0x40e355fc,'api'),(0x40d25dd0,'pcm'),(0x40f9f758,'flags'),(0x40f9ff2c,'terminal'),(0x40f9fdf0,'fast_timer')]:patch(pc,branch(pc,syms['hook_'+name]),name+' native adapter, original displaced instruction replayed')
     for pc,name in [(0x40fa0130,'composite'),(0x40fa0198,'cxx_stop')]:patch(pc,branch(pc,syms['hook_'+name]),'Composite-route bounded frame audio '+name+'; original entry instruction replayed')
     for pc,name in [(0x40e395b0,'notice_sync_end'),(0x40e39728,'notice_async_end')]:patch(pc,branch(pc,syms['hook_'+name]),'Retire callback registration after original final notice and pending outputs clear; no PCM free')
     # Original current-frame call is left unchanged; no late frame audio retrigger.
@@ -121,11 +124,11 @@ def build(module,output):
     patch(0x4032e57c,branch(0x4032e57c,syms['mark2_discovery_label']),'Custom labels only; original text resolver instruction replayed')
     patch(0x405a5584,struct.pack('<I',0x94000000|(((syms['mark2_outer_type_text']-0x405a5584)//4)&0x3ffffff)),'Only outer Camera sounds Type text: CUS when custom selected, native enum unchanged')
     b.extend(b'Ver.05.32.00\0');payload=O/'payload.bin'
-    assert sha(b)==EXPECTED_PAYLOAD, 'Compiler output differs from frozen v14; no final payload/module written'
+    assert sha(b)==EXPECTED_PAYLOAD, 'Compiler output differs from frozen v15; no final payload/module written'
     payload.write_bytes(b)
     module_bytes=bytes(b)+struct.pack('>H',binascii.crc_hqx(b,0))
     (O/'eg1990_053200.bi').write_bytes(module_bytes)
 
-    result=dict(feature='mark2-v14',input_module_sha256=sha(raw),payload_sha256=sha(b),payload_bytes=len(b),module_sha256=sha(module_bytes),module_bytes=len(module_bytes),patches=patches,compiler=run(['aarch64-linux-gnu-gcc','--version']).splitlines()[0],device_qualified=False)
+    result=dict(feature='mark2-v15',input_module_sha256=sha(raw),payload_sha256=sha(b),payload_bytes=len(b),module_sha256=sha(module_bytes),module_bytes=len(module_bytes),patches=patches,compiler=run(['aarch64-linux-gnu-gcc','--version']).splitlines()[0],device_qualified=False)
     (O/'build-report.json').write_text(json.dumps(result,indent=2)+'\n',encoding='utf-8')
     return result

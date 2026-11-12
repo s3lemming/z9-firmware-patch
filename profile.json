@@ -1,15 +1,15 @@
 {
   "schema": "z9-mark2-source-profile-v1",
-  "feature": "mark2-v14",
+  "feature": "mark2-v15",
   "target": "Z9 5.32",
   "original_module_sha256": "979fc8c5a46b3be8a998d5defb8be916d766ef85428744ba0bc47a1cb0ba9a66",
   "original_container_sha256": "2f13e75d38cd5b65da5b1f21a7828bc8a65ab17dc4c1b435b040ee62d2ed1d81",
-  "expected_payload_sha256": "c8c633ee6afb63bf776fa6c6f7b58b35deada58ef2b7e55790f2b12e1e5d0e01",
-  "expected_payload_bytes": 81853963,
-  "expected_container_sha256": "6dd183e3de23f616d533a1ecf0c2e325cb67715e6a3def11bd65aee0e76a9734",
-  "expected_container_bytes": 101876945,
+  "expected_payload_sha256": "3411b21ec875ba3326f9e0a4c6e1ecadc81a696d15b0e2af9f3b0ebe052801bc",
+  "expected_payload_bytes": 81854203,
+  "expected_container_sha256": "1885ee0660bee56e6d3a4d359d70b00f7fbeba932fc6c22f104eb20d76581fe4",
+  "expected_container_bytes": 101877185,
   "authored_source_sha256": {
-    "firmware/adapter.c": "dc61c61cad6880baca2977966eb9eee686670657c914a5a7046809302c8c29b6",
+    "firmware/adapter.c": "85199bfff023eee5396f30858da2b0828f15ddd0d6291a60c6797658b630151f",
     "firmware/picker.c": "e0d9b2c1835f078a3ab943c191b36037f67395b97f759b1dfc22d9d2bce44400",
     "firmware/mark2_import.c": "335531920a498b57484652c3365df3e44b522c7e9b4c10ef6f097a6575a8dba1",
     "firmware/mark2_import.h": "8823e23ce2066a205b9e3867c450f48db4f22574c76a8ca1e059dcc1d159371f",
@@ -17,7 +17,8 @@
     "firmware/profile.h": "94ff7ad9617e1505fc74cf9e9d988947b71a51e8f368e01e72a681c880bcfb63",
     "firmware/profile.c": "ff3d503c5fa860f10e890b7705449bcf9cc1f26f23e395a52b24ee24d8ba9cc2",
     "firmware/profile_native.c": "e64ce0c8b3a3c61152a7faf8e23c4483781dc6f78594f11379f8542c9d351123",
-    "firmware/runtime.c": "38a49a22201ed5a2e2b78f6963a76a2aa1075521acb1a780886e7b4aeaf5fa77"
+    "firmware/runtime.c": "38a49a22201ed5a2e2b78f6963a76a2aa1075521acb1a780886e7b4aeaf5fa77",
+    "z9patch/restart.py": "716fb7fe03038c5d61e92cdcd71261e434d27b154f8a66e7c13d673a7cd16214"
   },
   "limits": {
     "import_attempts_per_boot": null,
@@ -38,6 +39,7 @@
     },
     "C15_preserves_native_cycle_budget": true,
     "cold_menu_restores_saved_custom": true,
-    "current_selected_file_kept_within_file_limit": true
+    "current_selected_file_kept_within_file_limit": true,
+    "ordinary_custom_kind0_native_restart": true
   }
 }

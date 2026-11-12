@@ -1,6 +1,6 @@
 # Z9 firmware patch — mark2
 
-Experimental, source-only custom shutter sound patch for **Nikon Z9 firmware 5.32**, frozen at mark2 v14. This repository contains newly authored patch code and offline tools. It does not contain Nikon firmware, Nikon source code, extracted resources, recordings, private format material, camera readbacks, or an installable firmware image.
+Experimental, source-only custom shutter sound patch for **Nikon Z9 firmware 5.32**, frozen at mark2 v15. This repository contains newly authored patch code and offline tools. It does not contain Nikon firmware, Nikon source code, extracted resources, recordings, private format material, camera readbacks, or an installable firmware image.
 
 [中文说明](README.zh-CN.md) · [Changes](CHANGELOG.md) · [Architecture](docs/architecture.md) · [Z8 porting study (中文)](docs/z8-porting.zh-CN.md) · [Validation and limitations](docs/validation.md) · [Publication boundary](docs/publication.md)
 
@@ -12,7 +12,23 @@ Accepted audio is RIFF WAV, PCM format 1, **48 kHz, stereo, 16-bit little-endian
 
 v12 removes the four-import-attempt quota. Repeated PCM content reuses an immutable cache; failed attempts remain retryable. Up to **20 distinct PCM contents per boot** are retained, plus one unpublished scratch allocation. Cached choices remain available when the cache is full. The **64 callback registrations** can be reused only after the original final callback returns and pending outputs are clear; this does not authorize freeing PCM memory.
 
-In **C15**, holding the shutter loops the first **50 ms**, preserving the original cycle budget (about 67ms measured for long clips). **C30/C60/C120** loop the first **40 ms** (about 40ms measured for long clips). After the original stop completes, the remainder plays once. Clips at or below their mode's boundary loop their whole padded content without an extra tail; other Cxx clips shorter than 40ms do not gain a fixed 40ms period. S/CL/CH retain their original request-driven fast/slow paths. See the [v12-to-v13 changes](CHANGELOG.md) and [validation boundaries](docs/validation.md). Native sustained use beyond 64 requests and long-term hardware stability remain unqualified.
+In **C15**, holding the shutter loops the first **50 ms**, preserving the original cycle budget (about 67ms measured for long clips). **C30/C60/C120** loop the first **40 ms** (about 40ms measured for long clips). After the original stop completes, the remainder plays once. Clips at or below their mode's boundary loop their whole padded content without an extra tail; other Cxx clips shorter than 40ms do not gain a fixed 40ms period. S/CL/CH retain their original request-driven fast/slow paths, with the v15 ordinary-CUS restart correction below. See the [v12-to-v13 changes](CHANGELOG.md) and [validation boundaries](docs/validation.md). Native sustained use beyond 64 requests and long-term hardware stability remain unqualified.
+
+## v15 ordinary custom-sound restart
+
+For the original scheduler's already-qualified ordinary kind0 request, a selected
+custom sound now takes the original stop/wait/new-request path instead of reusing
+the short built-in resource. Native A–E and Cxx/pending/active tails keep their
+original ownership. The gate does not clear busy, forge completion, cut the WAV,
+change sample rate or queue playback. It preserves caller registers, NZCV and
+stack alignment; displaced instructions come only from the checked local input.
+
+The related integrated c4 development5.61 package received user feedback on
+2026-11-12 that CH20 sound is normal. Standalone v15 has its own frozen identity
+and has not received installation acceptance. Earlier QEMU success did not
+reproduce the bad short-reuse branch and is not proof of rated20fps or emulator
+timing repair. The failed terminal-kind-family experiment is not included.
+See [CH20 analysis (中文)](docs/ch20-restart.zh-CN.md) and [validation](docs/validation.md).
 
 ## v14 cold-menu fix
 
@@ -31,10 +47,10 @@ build or a Z8 port. Playback code is unchanged from v13. See [validation](docs/v
 
 ## Build locally
 
-Tested on Ubuntu 24.04 / WSL with Python 3.12, GCC AArch64 13.3.0 and GNU binutils 2.42. Host tests also need GCC and NumPy. A different compiler may generate different bytes and is rejected by the final payload identity check.
+Tested on Ubuntu 24.04 / WSL with Python 3.12, GCC AArch64 13.3.0 and GNU binutils 2.42. Host tests also need GCC, NumPy, the AArch64 cross tools and qemu-aarch64 (qemu-user). A different compiler may generate different bytes and is rejected by the final payload identity check.
 
 ```sh
-sudo apt-get install python3 python3-numpy gcc gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
+sudo apt-get install python3 python3-numpy gcc gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu qemu-user
 python3 -B tests/run.py --output /path/outside-repository/new-host-tests
 python3 -B patch.py build \
   --module /path/to/your-original/eg1990_053200.bi \

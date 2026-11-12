@@ -10,8 +10,10 @@
     "README.md",
     "README.zh-CN.md",
     "docs/architecture.md",
+    "docs/ch20-restart.zh-CN.md",
     "docs/history/v12-validation.md",
     "docs/history/v13-validation.md",
+    "docs/history/v14-validation.md",
     "docs/publication.md",
     "docs/validation.md",
     "docs/z8-porting.zh-CN.md",
@@ -37,6 +39,8 @@
     "tests/notice.py",
     "tests/picker_body.c",
     "tests/profile_native_body.c",
+    "tests/restart.py",
+    "tests/restart_abi.py",
     "tests/run.py",
     "tests/tooling.py",
     "tools/audit_publication.py",
@@ -44,6 +48,7 @@
     "z9patch/builder.py",
     "z9patch/container.py",
     "z9patch/packaging.py",
-    "z9patch/readback.py"
+    "z9patch/readback.py",
+    "z9patch/restart.py"
   ]
 }

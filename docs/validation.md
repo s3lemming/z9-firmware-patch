@@ -1,51 +1,56 @@
-# Validation and limitations — v14
+# Validation and limitations — v15
 
 ## Frozen standalone output identity
 
 | Output | Bytes | SHA-256 |
 |---|---:|---|
-| MAIN excluding module CRC | 81853963 | `c8c633ee6afb63bf776fa6c6f7b58b35deada58ef2b7e55790f2b12e1e5d0e01` |
-| Full private container | 101876945 | `6dd183e3de23f616d533a1ecf0c2e325cb67715e6a3def11bd65aee0e76a9734` |
+| MAIN excluding module CRC | 81854203 | `3411b21ec875ba3326f9e0a4c6e1ecadc81a696d15b0e2af9f3b0ebe052801bc` |
+| Full private container | 101877185 | `1885ee0660bee56e6d3a4d359d70b00f7fbeba932fc6c22f104eb20d76581fe4` |
 
-Strict source/input checks, compilation, packing and independent readback passed
-locally with the documented toolchain. The other five modules remain original.
-No firmware or private inputs are published. Identity enrollment was a separate
-private preparation step; the final public builder always enforces frozen input,
-source and output hashes. These output identities differ from the integrated
-v39 package. [v13 validation](history/v13-validation.md) remains historical.
+These are standalone mark2 v15 outputs targeting original Z9 5.32, not the
+integrated development 5.61 package. The public builder checks the exact original
+module, authored-source hashes and final payload identity. Private packing and
+independent readback preserve the other five modules. Original firmware and
+private materials remain local; no generated firmware is published.
 
 ## Current evidence
 
 | Layer | Result | Boundary |
 |---|---|---|
-| Standalone actual picker C | 16 groups/38 assertions with ASan/UBSan | Original file/UI/allocation functions are explicit mocks |
-| Existing synthetic suites | cache2420 assertions, loop3000 cases, callback1000 requests, profile329 cases, format29, tooling16 | Not native sustained-use or device qualification |
-| Integrated v39 QEMU | Fresh-process cold parent CUS/current filename, repeated entry, native A/custom switch and post-photo menu passed | One final complete workflow; intermediate failed navigation attempts remain failures |
-| Integrated actual photo/audio | One C15 JPEG fully decoded; 9600B prefix and 166080B tail, successful callbacks and completed DMA bytes match source | Not photo-rate, acoustic or all-mode stability qualification |
-| User hardware feedback, 2026-11-05 | Integrated v39 audio menu correct after restart | No claimed standalone v14 installation, arbitrary power-loss matrix or long-term run |
+| Actual ordinary-restart predicate | 576 ownership/state combinations, ASan/UBSan; no state mutation | Native kind0 qualification occurs upstream; this is not a scheduler simulation |
+| Production gate on AArch64 | 8 synthetic cases, both paths; X0–X30, NZCV, SP alignment/restoration and displaced ADDS replay checked | User-mode instruction execution with a clobbering ABI stub; no Nikon firmware or camera guest |
+| Existing synthetic suites | cold-menu16/38; cache2420 assertions; loop3000 cases; callback1000 requests; profile329; format29; tooling16 | Component results do not grant sustained native or hardware qualification |
+| Standalone strict build/pack/readback | Frozen identity enforced, including after gate-generator extraction | Not installation or standalone hardware acceptance |
+| Integrated c4 QEMU, 2026-11-12 | One fresh no-lens CH20/M1/250 run, two1s contacts, 34 JPEG/34 PCM; repeat press and released tail checked | Approximately65ms cadence; bad-baseline short-reuse window was not reproduced |
+| User hardware feedback, 2026-11-12 | Current integrated c4 development5.61 CH20 sound reported normal | User report, not device readback or an exhaustive exposure/lens/long-term matrix; standalone v15 not installed |
 
-The original failure was absent menu-entry restore plus missing filename-model
-reconstruction. The new parent callback reconciles confirmed state before
-native values refresh. Child marking/focus fixes the remaining stale A/hidden
-filename symptom. Tests cover first and direct child entry, audio-first restore,
-repeat/no-write behavior, explicit native selection, invalid/disabled CFG, absent
-WAV/card, dual-card ambiguity, card2 only, busy deferral and selection beyond20.
-Renderer I/O remains forbidden. The additional integrated runtime-ready guard
-is tested privately with its own anchor, not transplanted into this fixed-BSS
-standalone build.
+The accepted integrated package SHA-256 is
+`96a395f1f8f64da4d30468edf66fd5070551ee5f2e096a0ed28fe4cd9c714c85`,
+with MAIN `c4fd921106add69148dcd16e96389dbc9b472e85074ffeb944a0da77e512ef44`.
+It includes other projects and a heap/ready-anchor contract. Standalone v15 uses
+its existing fixed BSS. The restart ownership predicate and native targets are
+adapted here; whole firmware identities and installation acceptance are separate.
 
-## Limits retained
+## Failure history and remaining limits
 
-Published PCM is immutable and retained until shutdown; at most20 distinct
-contents plus scratch. Callback reuse needs native final-return retirement and
-clear pending states; completion alone is insufficient and does not free PCM.
-Missing-card restore does not automatically retry. An absent card cannot have
-its old profile disabled. Full card removal/power-loss cases, all CL/CH rates,
-short/repressed Cxx hardware behavior, native sustained use beyond64 requests
-and long-term stability remain outside the new acceptance scope.
+Earlier integrated development5.61 and the terminal-kind-family experiment still
+had the user-reported CH20 symptom: normal interrupted prefixes at1/200, repeated
+whole clips at1/250. The accepted c4 uses the ordinary kind0 restart gate and does
+not include that kind-family extension. The passing old QEMU runs did not cover
+the physical bad branch. See the [CH20 analysis](ch20-restart.zh-CN.md).
 
-Historical v13 mixed-shutter/recovery failures remain in its evidence; the
-bounded integrated C15 success does not rewrite those old results. QEMU emulation,
-RAW capture/retouch and Z8 firmware are not implemented by this repository.
-See the [Z8 learning/porting guide](z8-porting.zh-CN.md) for interfaces that need
-new target-version evidence.
+An earlier same-c4 QEMU attempt stopped at a native frontend failure; the later
+fresh34-photo success does not erase it. Further official-stock/no-lens/native-A
+control produced33 JPEG/33 PCM at1/250, with median intervals65.64/62.67ms. No
+emulator repair, rated20fps or physical failure reproduction is claimed here.
+
+Published PCM remains immutable until shutdown; at most20 contents plus scratch.
+The64 callback registrations require original final-return retirement and idle
+outputs, not only completion. All rates, all tones and lens combinations,
+rapid Cxx/tail repress, full card/power-loss matrices and long-term hardware
+remain outside this new acceptance. The v15 gate preserves Cxx/tail ownership.
+Native A–E and all previously retained cache, menu and lifecycle limits apply.
+
+[v14 validation](history/v14-validation.md) and [v13 validation](history/v13-validation.md)
+remain historical. Their old mixed-shutter/recovery failures are not reclassified.
+The [Z8 guide](z8-porting.zh-CN.md) requires separate target ABI and device evidence.
